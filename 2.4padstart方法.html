@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>2.4padstart方法</title>
+	<style>
+		table{
+			width:800px;
+			margin-top:20px;
+		}
+		tr{
+			height:40px;
+		}
+		td{
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+		<label for="">Id
+			<input type="text" v-model="id"/>
+		</label>
+		<label for="">Name
+			<input type="text" v-model="name"/>
+		</label>
+		<!-- 在vue中，使用事件绑定机制，为元素指定处理函数式，如果加了小括号，就可以传参。加或不加都可以。 -->
+		<input type="button" value="添加" @click="add()"/>
+		<label for="">搜索关键字
+			<input type="text" v-model="keywords"/>
+		</label>
+		<table border="1" cellpadding="0" cellspacing="0">
+			<thead>
+				<tr>
+					<th>id</th>
+					<th>name</th>
+					<th>ctime</th>
+					<th>ope</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="item in search(keywords)" :key="item.id">
+					<td>{{ item.id }}</td>
+					<td v-text="item.name"></td>
+					<td>{{ item.ctime | dataFormat('')}}</td>
+					<td>
+						<!-- 点击链接时默认会刷新页面，为默认事件，要prevent -->
+						<a href="" v-on:click.prevent="del(item.id)">删除</a>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<div id="app2">
+		<p>{{ dt | dataFormat }}</p>
+	</div>
+	<script src="vue.js"></script>
+	<script>
+		//所谓的全局过滤器，就是所有vm实例都共享的
+				function toDouble(x){
+					if(x < 10){
+						x = '0' + x;
+					}
+					return x;
+				}
+		//让pattern默认等于'',防止忘记传参；若参数不传，默认为undefind
+		Vue.filter('dataFormat',function(dataStr,pattern=''){
+			//根据给定的时间字符串，得到特定时间
+			var dt = new Date(dataStr);
+			//yyyy-mm-dd
+			var y = dt.getFullYear();
+			var m = dt.getMonth() + 1;
+			var d = dt.getDate();
+
+			// return y + '-' + m + '-' + d;
+			//模板字符串
+			// return `${y}-${m}-${d}`;
+			if(pattern.toLowerCase() === 'yyyy-mm-dd'){
+				return `${y}-${toDouble(m)}-${toDouble(d)}`;
+			}
+			else{
+				var hh = dt.getHours();
+				var mm = dt.getMinutes();
+				var ss = dt.getSeconds();
+				return `${y}-${toDouble(m)}-${toDouble(d)} ${toDouble(hh)}-${toDouble(mm)}-${toDouble(ss)}`;
+			}
+		})
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				id:'',
+				name:'',
+				keywords:'',
+				list:[
+					{'id':'1','name':'宝马','ctime':new Date()},
+					{'id':'2','name':'奔驰','ctime':new Date()},
+					{'id':'3','name':'长安汽车','ctime':new Date()},
+					{'id':'4','name':'福特','ctime':new Date()}
+				]
+			},
+			methods:{
+				add(){
+					var car = {'id':this.id,'name':this.name,'ctime':new Date()};
+					this.list.push(car);
+				},
+				del(id){
+					//根据id删除数据
+					//要根据索引来删，如何通过id找到索引
+					//直接调用数组的splice方法
+					// this.list.some((item,i) => {  //回调函数
+					// 	if(item.id == id){
+					// 		this.list.splice(i,1);   //删除，从i开始，删一条记录
+					// 		//在数组的some方法中，如果return true 就会立即终止这个数组的后续循环
+					// 		return true;
+					// 	}
+					// })
+					// 
+					// 返回符合条件的第一个元素的位置
+					var index = this.list.findIndex(item =>{
+						if(item.id == id){
+							return true;
+						}
+					})
+					//console.log(index);
+					this.list.splice(index,1);
+					
+				},
+				search(keywords){  //根据关键字搜索
+					// var newList = [];
+					// this.list.forEach(item => {
+					// 	if(item.name.indexOf(keywords) != -1){
+					// 		newList.push(item);
+					// 	}
+					// })
+					// return newList;
+					// 
+					// 
+					//注意:forEach some filter findIndex 都是数组的新方法，都会对数组中的每一项进行便利，执行操作
+					//filter会返回一个符合条件的新数组
+					return this.list.filter(item =>{
+						//在ES6中，为字符串提供了新方法，String.prototype.includes('要包含的字符串')   包含则返回true，否则返回false
+						if(item.name.includes(keywords)){
+							return item;
+						}
+					})
+				}
+			}
+		})
+		//如何定义一个私有的过滤器（局部）
+		var vm2 = new Vue({
+			el:'#app2',
+			data:{
+				dt:new Date()
+			},
+			methods:{},
+			filters:{  //定义私有过滤器      过滤器有两个条件 【过滤器名称 和 处理函数】
+				//过滤器调用时，采用的是就近原则，如果私有过滤器和全局过滤器名称一致了，这时候，优先调用私有过滤器
+				//filters为一个对象
+				dataFormat:function(dataStr,pattern = ''){
+					//根据给定的时间字符串，得到特定时间
+					var dt = new Date(dataStr);
+					//yyyy-mm-dd
+					var y = dt.getFullYear();
+					var m = (dt.getMonth() + 1).toString().padStart(2,'0');
+					var d = dt.getDate().toString().padStart(2,'0');
+
+					// return y + '-' + m + '-' + d;
+					//模板字符串
+					// return `${y}-${m}-${d}`;
+					if(pattern.toLowerCase() === 'yyyy-mm-dd'){
+						return `${y}-${m}-${d}`;
+					}
+					else{
+						var hh = dt.getHours().toString().padStart(2,'0');
+						var mm = dt.getMinutes().toString().padStart(2,'0');
+						var ss = dt.getSeconds().toString().padStart(2,'0');
+						return `${y}-${m}-${d} ${hh}-${mm}-${ss}~~~`;
+					}
+				}
+			}
+		})
+	</script>
+</body>
+</html>
+

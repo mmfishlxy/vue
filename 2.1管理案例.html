@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>管理案例</title>
+	<style>
+		table{
+			width:800px;
+			margin-top:20px;
+		}
+		tr{
+			height:40px;
+		}
+		td{
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+		<label for="">Id
+			<input type="text" v-model="id"/>
+		</label>
+		<label for="">Name
+			<input type="text" v-model="name" @keyup.f2="add()"/>
+		</label>
+		<!-- 在vue中，使用事件绑定机制，为元素指定处理函数式，如果加了小括号，就可以传参。加或不加都可以。 -->
+		<input type="button" value="添加" @click="add()"/>
+		<label for="">搜索关键字
+			<input type="text" v-model="keywords" v-focus v-color="'blue'"/>
+		</label>
+		<table border="1" cellpadding="0" cellspacing="0">
+			<thead>
+				<tr>
+					<th>id</th>
+					<th>name</th>
+					<th>ctime</th>
+					<th>ope</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="item in search(keywords)" :key="item.id">
+					<td>{{ item.id }}</td>
+					<td v-text="item.name"></td>
+					<td>{{ item.ctime }}</td>
+					<td>
+						<!-- 点击链接时默认会刷新页面，为默认事件，要prevent -->
+						<a href="" v-on:click.prevent="del(item.id)">删除</a>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<script src="vue.js"></script>
+	<script>
+		// document.getElementById('search').focus();
+		// 
+		// 
+		//全局自定义按键修饰符
+		Vue.config.keyCodes.f2 = 113;
+
+		//使用Vue.directive定义 全局 的指令v-focus
+		//其中参数一是指令的名称   注：在定义时，指令名称前不用加v-前缀   但是在调用时时，指令名称前一定要加v-前缀
+		//参数而是一个对象，对象身上有一些指令相关的函数，可以在特定阶段执行相关函数
+		//el是被绑定指令的元素，是一个原生的jsDOM对象,在每个函数内部可以执行相应方法操作DOM对象
+		Vue.directive('focus',{
+			//注意：在每个函数中，第一个参数永远是el，标识被绑定指令的元素，是一个原生的js对象
+			bind:function(el){
+				//每当指令绑定到这个函数上时，会立即执行这个bind函数，只执行一次
+				//在元素刚绑定了指令的时候，还没有插入到DOM中去，这时候调用focus方法没有用
+				//因为一个元素只有插入DOM后，才能获取焦点
+				//和样式相关的操作，一般都可以在bind中执行
+			},
+			inserted:function(el){
+				//inserted表示元素插入到DOM中的时候，会执行inserted函数（触发一次）
+				//和JS有关的行为最好放到inserted中去执行，防止js行为不生效
+				el.focus();
+			},
+			updated:function(el){
+				//当VNode更新时，会执行updated，可能会被触发多次
+			}
+		})
+
+		Vue.directive('color',{
+			//样式只要通过指令绑定给了元素，不管元素又没有插入到页面中去，元素肯定有了内联样式
+			//将来元素肯定会显示到页面中，这时候浏览器的渲染引擎肯定会解析样式，应用到这个元素上
+			bind:function(el,binding){
+				el.style.color = binding.value;
+				//console.log(bingdin.name);
+				//console.log(bingdin.value);
+				//console.log(bingdin.expression);
+			},
+			inserted:function(el){
+
+			},
+			updated:function(el){
+
+			}
+		})
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				id:'',
+				name:'',
+				keywords:'',
+				list:[
+					{'id':'1','name':'宝马','ctime':new Date()},
+					{'id':'2','name':'奔驰','ctime':new Date()},
+					{'id':'3','name':'长安汽车','ctime':new Date()},
+					{'id':'4','name':'福特','ctime':new Date()}
+				]
+			},
+			methods:{
+				add(){
+					var car = {'id':this.id,'name':this.name,'ctime':new Date()};
+					this.list.push(car);
+				},
+				del(id){
+					//根据id删除数据
+					//要根据索引来删，如何通过id找到索引
+					//直接调用数组的splice方法
+					// this.list.some((item,i) => {  //回调函数
+					// 	if(item.id == id){
+					// 		this.list.splice(i,1);   //删除，从i开始，删一条记录
+					// 		//在数组的some方法中，如果return true 就会立即终止这个数组的后续循环
+					// 		return true;
+					// 	}
+					// })
+					// 
+					// 返回符合条件的第一个元素的位置
+					var index = this.list.findIndex(item =>{
+						if(item.id == id){
+							return true;
+						}
+					})
+					//console.log(index);
+					this.list.splice(index,1);
+					
+				},
+				search(keywords){  //根据关键字搜索
+					// var newList = [];
+					// this.list.forEach(item => {
+					// 	if(item.name.indexOf(keywords) != -1){
+					// 		newList.push(item);
+					// 	}
+					// })
+					// return newList;
+					// 
+					// 
+					//注意:forEach some filter findIndex 都是数组的新方法，都会对数组中的每一项进行便利，执行操作
+					//filter会返回一个符合条件的新数组
+					return this.list.filter(item =>{
+						//在ES6中，为字符串提供了新方法，String.prototype.includes('要包含的字符串')   包含则返回true，否则返回false
+						if(item.name.includes(keywords)){
+							return item;
+						}
+					})
+				}
+			}
+		})
+	</script>
+</body>
+</html>
+

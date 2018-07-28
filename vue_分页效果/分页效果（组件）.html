@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>无标题文档</title>
+    <style type="text/css">
+    body{margin:0;}
+    .box{margin:100px;}
+    .page,.prev,.next{margin:0 10px; cursor:pointer;}
+    .page:hover,.prev:hover,.next:hover,.page.active{color:#6CF;}
+    .prev.disabled,.next.disabled{cursor:not-allowed; color:#ccc;}
+    .prev.disabled:hover,.next.disabled:hover{color:#ccc;}
+    .jump input{width:40px; margin:0 10px;}
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="pagination">
+            <span class="total">共 {{m}} 条 / {{t}} 页</span>
+            <span class="prev disabled"><</span>
+            <!-- <span class="page active">1</span>
+            <span class="page">2</span>
+            <span class="page">3</span> -->
+            <span v-for="i,index of m/t" v-bind:class="{page:true,active:w==index}" v-on:click="change(index)">{{i}}</span>
+            <span class="next">></span>
+            <span class="jump">
+                前往<input type="text" v-model="x" />页
+            </span>
+        </div>
+    </div>
+    <script src="vue.js"></script>
+    <script>
+        var app = new Vue({
+            el : ".box",
+            data : {
+                m : 400,
+                t : 40,
+                w : 0,
+                x : 1
+            },
+            methods : {
+                change(index){
+                    this.w = index;
+                    this.x = index + 1;
+                }
+            }
+        })
+    </script>
+</body>
+</html>

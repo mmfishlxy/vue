@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>2.2过滤器的基本使用</title>
+</head>
+<body>
+	<div id="app">
+		<p>{{ msg }}</p>
+		<p>{{ msg | msgFormat('疯狂','123') | test }}</p>
+	</div>
+	<script src="vue.js"></script>
+	<script>
+		//定义一个全局的过滤器
+		Vue.filter('msgFormat',function(msg,arg,arg2){
+			//字符串的replace方法第一个参数可以为字符串或者正则表达式
+			return msg.replace(/单纯/g,arg + arg2);
+		}) 
+		Vue.filter('test',function(msg){
+			return msg + '========';
+		})
+		var vm = new Vue({
+			el:'#app',
+			data:{
+				msg:'曾经，我也是一个单纯的孩子，单纯的年代里不知忧愁，只是过着单纯的日子。'
+			},
+			methods:{
+
+			}
+		})
+	</script>
+</body>
+</html>
